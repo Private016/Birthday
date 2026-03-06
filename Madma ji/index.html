@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Bestie! 🎁✨</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        handwriting: ['Caveat', 'cursive'],
+                    },
+                    colors: {
+                        primary: '#ff7eb3',
+                        secondary: '#7a28cb',
+                        dark: '#1a0b2e',
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 15s ease infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            background-color: #0f0518;
+            color: white;
+            scroll-behavior: smooth;
+            cursor: none; /* Hide default cursor for custom one */
+        }
+
+        /* Animated Background */
+        .bg-animated {
+            background: linear-gradient(-45deg, #1a0b2e, #4a154b, #7a28cb, #ff7eb3);
+            background-size: 400% 400%;
+            animation: gradient-x 15s ease infinite;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom Cursor */
+        #cursor-glow {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(255,126,179,0.8) 0%, rgba(255,126,179,0) 70%);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s;
+            mix-blend-mode: screen;
+        }
+
+        #cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Interactive Elements Hover */
+        a:hover ~ #cursor-glow, button:hover ~ #cursor-glow, .polaroid:hover ~ #cursor-glow {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%);
+        }
+
+        /* Polaroid styling */
+        .polaroid {
+            background: white;
+            padding: 10px 10px 25px 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: grab;
+            position: absolute; /* For dragging and scattering */
+        }
+        .polaroid:active {
+            cursor: grabbing;
+        }
+        .polaroid img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            pointer-events: none; /* Prevents image dragging ghost */
+        }
+        .polaroid-text {
+            font-family: 'Caveat', cursive;
+            color: #333;
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 10px;
+            pointer-events: none;
+        }
+        .tape {
+            background-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            position: absolute;
+            width: 100px;
+            height: 25px;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Hide Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a0b2e; }
+        ::-webkit-scrollbar-thumb { background: #ff7eb3; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff529a; }
+
+        /* Typing cursor animation */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-animated font-sans antialiased text-white min-h-screen">
+
+    <!-- Custom Cursor -->
+    <div id="cursor-glow"></div>
+    <div id="cursor-dot"></div>
+
+    <!-- Background Particle Canvas -->
+    <canvas id="canvas-container"></canvas>
+
+    <!-- Music Player (Hidden audio, custom UI) -->
+    <!-- You can replace the src with your own romantic/birthday music link -->
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/02/07/audio_2d897dd603.mp3?filename=soft-romantic-piano-113303.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Floating Music Controls -->
+    <div id="music-controls" class="fixed bottom-6 left-6 z-50 glass rounded-full px-4 py-2 flex items-center gap-3 opacity-0 transition-opacity duration-1000 hidden">
+        <button id="play-pause-btn" class="text-white hover:text-primary transition">
+            <i class="fas fa-pause"></i>
+        </button>
+        <div class="text-xs font-serif tracking-widest uppercase">Playing Magic</div>
+    </div>
+
+    <!-- Screen 1: Welcome / Unlock Screen -->
+    <div id="welcome-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-animated transition-opacity duration-1000">
+        <div class="text-center p-8 glass rounded-3xl max-w-lg mx-4 transform transition-all hover:scale-105 duration-500">
+            <h1 class="font-serif text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300">
+                A Special Surprise Awaits...
+            </h1>
+            <p class="text-gray-300 mb-8 font-light tracking-wide">Are you ready to unlock it?</p>
+            
+            <button id="unlock-btn" class="relative group overflow-hidden rounded-full p-[2px]">
+                <span class="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full opacity-70 group-hover:opacity-100 blur-sm transition-opacity duration-500"></span>
+                <div class="relative bg-dark px-8 py-4 rounded-full flex items-center gap-3 transition-all duration-300 group-hover:bg-opacity-0">
+                    <i class="fas fa-gift text-2xl group-hover:animate-bounce text-pink-400"></i>
+                    <span class="font-bold text-lg tracking-wider">Unlock the Surprise ✨</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Screen 2: Main Content (Initially Hidden) -->
+    <div id="main-content" class="content-layer hidden opacity-0 transition-opacity duration-1000 pt-20 pb-20 px-4 md:px-10 max-w-7xl mx-auto">
+        
+        <!-- Hero Section -->
+        <section class="min-h-[80vh] flex flex-col items-center justify-center text-center">
+            <div class="animate-float">
+                <i class="fas fa-crown text-5xl text-yellow-400 mb-6 opacity-80 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
+            </div>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold mb-6 text-white drop-shadow-lg">
+                Happy Birthday <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">My Bestie</span> 🎂✨
+            </h1>
+            
+            <div class="glass px-8 py-4 rounded-2xl max-w-2xl mt-4">
+                <p id="typed-subtitle" class="text-xl md:text-2xl font-light text-pink-100 typing-cursor h-8">
+                    <!-- Typed dynamically -->
+                </p>
+            </div>
+
+            <div class="mt-16 animate-bounce">
+                <p class="text-sm font-light text-gray-400 mb-2 uppercase tracking-widest">Scroll to explore</p>
+                <i class="fas fa-chevron-down text-pink-400"></i>
+            </div>
+        </section>
+
+        <!-- Memory Gallery Section -->
+        <section class="py-20 my-10 relative">
+            <div class="text-center mb-16">
+                <h2 class="font-serif text-4xl md:text-5xl font-bold text-white mb-4">Our Beautiful Journey</h2>
+                <p class="text-pink-200 font-light text-lg">Drag and drop the photos to uncover the memories.</p>
+            </div>
+
+            <!-- Polaroid Container -->
+            <!-- We use absolute positioning inside this relative container to scatter them -->
+            <div id="gallery-container" class="relative w-full h-[600px] md:h-[800px] rounded-3xl overflow-hidden glass">
+                
+                <!-- Polaroid 1 -->
+                <div class="polaroid w-48 md:w-64" style="left: 10%; top: 15%; transform: rotate(-5deg); z-index: 10;">
+                    <div class="tape"></div>
+                    <!-- Replace src with your own photos -->
+                    <img src="https://picsum.photos/seed/bestie1/400/500" alt="Memory 1">
+                    <p class="polaroid-text">Best Memories ❤️</p>
+                </div>
+
+                <!-- Polaroid 2 -->
+                <div class="polaroid w-48 md:w-64" style="left: 40%; top: 5%; transform: rotate(8deg); z-index: 11;">
+                    <div class="tape"></div>
+                    <img src="https://picsum.photos/seed/bestie2/400/500" alt="Memory 2">
+                    <p class="polaroid-text">Crazy Moments 🤪</p>
+                </div>
+
+                <!-- Polaroid 3 -->
+                <div class="polaroid w-48 md:w-64" style="left: 65%; top: 25%; transform: rotate(-3deg); z-index: 12;">
+                    <div class="tape"></div>
+                    <img src="https://picsum.photos/seed/bestie3/400/500" alt="Memory 3">
+                    <p class="polaroid-text">Forever Friends ✨</p>
+                </div>
+
+                <!-- Polaroid 4 -->
+                <div class="polaroid w-48 md:w-64" style="left: 20%; top: 50%; transform: rotate(6deg); z-index: 13;">
+                    <div class="tape"></div>
+                    <img src="https://picsum.photos/seed/bestie4/400/500" alt="Memory 4">
+                    <p class="polaroid-text">Unstoppable Duo 👯‍♀️</p>
+                </div>
+
+                <!-- Polaroid 5 -->
+                <div class="polaroid w-48 md:w-64" style="left: 55%; top: 45%; transform: rotate(-8deg); z-index: 14;">
+                    <div class="tape"></div>
+                    <img src="https://picsum.photos/seed/bestie5/400/500" alt="Memory 5">
+                    <p class="polaroid-text">Through it all 🌟</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Message Generator Section -->
+        <section class="py-20 flex flex-col items-center justify-center">
+            <h2 class="font-serif text-4xl md:text-5xl font-bold text-white mb-8 text-center">Words From The Heart</h2>
+            
+            <div class="glass p-8 md:p-12 rounded-3xl max-w-3xl w-full text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-purple-500"></div>
+                
+                <div class="min-h-[150px] flex items-center justify-center mb-8">
+                    <p id="ai-message-display" class="font-serif text-xl md:text-3xl italic text-pink-100 leading-relaxed transition-all duration-500">
+                        "Click the button to reveal a special birthday message just for you..."
+                    </p>
+                </div>
+
+                <button id="generate-msg-btn" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 flex items-center gap-2 mx-auto">
+                    <i class="fas fa-magic"></i>
+                    Generate a Special Message
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer / Hidden Surprise -->
+        <footer class="mt-20 py-10 text-center relative">
+            <p class="text-gray-400 font-light text-sm">Made with lots of ❤️ for my favorite person.</p>
+            
+            <!-- Hidden Secret Button (Tiny star) -->
+            <button id="secret-btn" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-700 hover:text-yellow-400 transition-colors duration-300 opacity-50 hover:opacity-100" title="Click me for a secret!">
+                <i class="fas fa-star text-xs"></i>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Hidden Secret Modal -->
+    <div id="secret-modal" class="fixed inset-0 z-[100] hidden items-center justify-center">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm modal-bg"></div>
+        <div class="relative glass border-2 border-pink-400/50 p-10 rounded-3xl max-w-lg text-center transform scale-95 opacity-0 transition-all duration-500" id="modal-content">
+            <i class="fas fa-heart text-6xl text-pink-500 mb-6 animate-pulse-slow"></i>
+            <h3 class="font-serif text-4xl font-bold mb-4 text-white">The Biggest Surprise...</h3>
+            <p class="text-xl text-pink-100 leading-relaxed font-light mb-8">
+                You mean the world to me. I’m incredibly lucky to have a best friend like you. Here is to a hundred more birthdays together! Happy Birthday 🎉
+            </p>
+            <button id="close-modal" class="bg-white text-purple-900 font-bold py-2 px-6 rounded-full hover:bg-pink-100 transition">
+                Love you too! ❤️
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Custom Cursor Logic ---
+            const cursorGlow = document.getElementById('cursor-glow');
+            const cursorDot = document.getElementById('cursor-dot');
+            
+            document.addEventListener('mousemove', (e) => {
+                cursorDot.style.left = e.clientX + 'px';
+                cursorDot.style.top = e.clientY + 'px';
+                
+                // Add a slight delay for the glow for a trailing effect
+                setTimeout(() => {
+                    cursorGlow.style.left = e.clientX + 'px';
+                    cursorGlow.style.top = e.clientY + 'px';
+                }, 50);
+            });
+
+            // --- Unlock Sequence & Music ---
+            const unlockBtn = document.getElementById('unlock-btn');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const mainContent = document.getElementById('main-content');
+            const bgMusic = document.getElementById('bg-music');
+            const musicControls = document.getElementById('music-controls');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+
+            unlockBtn.addEventListener('click', () => {
+                // Confetti Explosion
+                const duration = 3000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: ['#ff7eb3', '#7a28cb', '#ffffff']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: ['#ff7eb3', '#7a28cb', '#ffffff']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+
+                // Play Music (Wrapped in try/catch as browsers may block autoplay)
+                try {
+                    bgMusic.volume = 0.4; // Soft volume
+                    bgMusic.play();
+                } catch (e) {
+                    console.log("Audio playback prevented by browser.");
+                }
+
+                // Transitions
+                welcomeScreen.classList.add('opacity-0');
+                setTimeout(() => {
+                    welcomeScreen.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
+                    musicControls.classList.remove('hidden');
+                    
+                    // Trigger reflow
+                    void mainContent.offsetWidth; 
+                    
+                    mainContent.classList.remove('opacity-0');
+                    musicControls.classList.remove('opacity-0');
+                    
+                    // Start Hero Typing Animation
+                    typeSubtitle();
+                }, 1000);
+            });
+
+            // Music Player Controls
+            let isPlaying = true;
+            playPauseBtn.addEventListener('click', () => {
+                if(isPlaying) {
+                    bgMusic.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                } else {
+                    bgMusic.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                isPlaying = !isPlaying;
+            });
+
+            // --- Hero Typing Effect ---
+            const subtitleText = "Today the world celebrates someone truly special.";
+            const subtitleEl = document.getElementById('typed-subtitle');
+            let typeIndex = 0;
+
+            function typeSubtitle() {
+                if (typeIndex < subtitleText.length) {
+                    subtitleEl.textContent += subtitleText.charAt(typeIndex);
+                    typeIndex++;
+                    setTimeout(typeSubtitle, 100); // Typing speed
+                } else {
+                    subtitleEl.classList.remove('typing-cursor'); // remove cursor when done
+                }
+            }
+
+            // --- Draggable Polaroids ---
+            const polaroids = document.querySelectorAll('.polaroid');
+            let highestZ = 20; // Start higher than default
+
+            polaroids.forEach(p => dragElement(p));
+
+            function dragElement(elmnt) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                elmnt.onmousedown = dragMouseDown;
+                elmnt.ontouchstart = dragMouseDown; // Touch support for mobile
+
+                function dragMouseDown(e) {
+                    e = e || window.event;
+                    
+                    // Don't prevent default on touch to allow scrolling if not dragging directly
+                    if(e.type === "mousedown") e.preventDefault();
+                    
+                    // Bring to front
+                    highestZ++;
+                    elmnt.style.zIndex = highestZ;
+                    
+                    // slight scale up effect
+                    elmnt.style.transform = `scale(1.05) ${elmnt.style.transform.includes('rotate') ? elmnt.style.transform.split('scale')[0] : ''}`;
+
+                    let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+                    pos3 = clientX;
+                    pos4 = clientY;
+                    
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                    document.ontouchend = closeDragElement;
+                    document.ontouchmove = elementDrag;
+                }
+
+                function elementDrag(e) {
+                    e = e || window.event;
+                    if(e.type === "mousemove") e.preventDefault();
+
+                    let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+                    pos1 = pos3 - clientX;
+                    pos2 = pos4 - clientY;
+                    pos3 = clientX;
+                    pos4 = clientY;
+                    
+                    // Calculate new position
+                    let newTop = elmnt.offsetTop - pos2;
+                    let newLeft = elmnt.offsetLeft - pos1;
+
+                    // Keep within boundaries of parent (rough estimation)
+                    const parent = elmnt.parentElement;
+                    const maxX = parent.clientWidth - elmnt.clientWidth;
+                    const maxY = parent.clientHeight - elmnt.clientHeight;
+
+                    newLeft = Math.max(0, Math.min(newLeft, maxX));
+                    newTop = Math.max(0, Math.min(newTop, maxY));
+
+                    elmnt.style.top = newTop + "px";
+                    elmnt.style.left = newLeft + "px";
+                }
+
+                function closeDragElement() {
+                    // reset scale but keep rotation
+                    elmnt.style.transform = elmnt.style.transform.replace('scale(1.05)', '').trim();
+                    
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                    document.ontouchend = null;
+                    document.ontouchmove = null;
+                }
+            }
+
+            // --- AI Message Generator ---
+            const messages = [
+                "You are not just my best friend — you are the person who makes ordinary days unforgettable. Thank you for every laugh, every memory, and every moment. Happy Birthday! ✨",
+                "To the one who knows all my secrets and still loves me: Happy Birthday! May your day be as beautiful and radiant as your soul. 🌸",
+                "We've shared so many incredible moments, and I can't wait to create a million more. Wishing the happiest of birthdays to my favorite human. 🥂",
+                "The world got a lot brighter the day you were born. Thank you for shining your light into my life. Let's celebrate YOU today! 🌟",
+                "A best friend is like a rare gem, and I hit the jackpot with you. I hope your birthday is filled with all the love and joy you deserve. 💎"
+            ];
+            
+            const generateBtn = document.getElementById('generate-msg-btn');
+            const msgDisplay = document.getElementById('ai-message-display');
+            let lastMsgIndex = -1;
+
+            generateBtn.addEventListener('click', () => {
+                // Generate a random index different from the last one
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * messages.length);
+                } while (newIndex === lastMsgIndex && messages.length > 1);
+                lastMsgIndex = newIndex;
+
+                const msg = messages[newIndex];
+                
+                // Fade out text, change, fade in
+                msgDisplay.style.opacity = '0';
+                
+                // Change icon to loading briefly
+                const originalContent = generateBtn.innerHTML;
+                generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+                generateBtn.disabled = true;
+
+                setTimeout(() => {
+                    msgDisplay.textContent = `"${msg}"`;
+                    msgDisplay.style.opacity = '1';
+                    
+                    // Reset button
+                    generateBtn.innerHTML = originalContent;
+                    generateBtn.disabled = false;
+                    
+                    // Small local confetti
+                    confetti({
+                        particleCount: 30,
+                        spread: 40,
+                        origin: { y: 0.8 },
+                        colors: ['#ff7eb3', '#ffffff']
+                    });
+
+                }, 800);
+            });
+
+            // --- Secret Button & Modal ---
+            const secretBtn = document.getElementById('secret-btn');
+            const modal = document.getElementById('secret-modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal');
+
+            function launchFireworks() {
+                var duration = 5 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+                function randomInRange(min, max) {
+                    return Math.random() * (max - min) + min;
+                }
+
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
+
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+
+            secretBtn.addEventListener('click', () => {
+                launchFireworks();
+                
+                // Show modal
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                // Trigger animation
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 50);
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 500);
+            });
+
+            // --- Background Canvas Particle System (Hearts & Bubbles) ---
+            const canvas = document.getElementById('canvas-container');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + Math.random() * 100; // Start below screen
+                    this.size = Math.random() * 5 + 2;
+                    this.speed = Math.random() * 1 + 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                    this.color = Math.random() > 0.5 ? '#ff7eb3' : '#7a28cb';
+                    this.wobble = Math.random() * Math.PI * 2;
+                    this.wobbleSpeed = Math.random() * 0.02 + 0.01;
+                    this.type = Math.random() > 0.7 ? 'heart' : 'circle';
+                }
+
+                draw() {
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = this.color;
+                    
+                    if(this.type === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Draw tiny heart
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+                        ctx.scale(this.size/10, this.size/10);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.bezierCurveTo(-5, -5, -10, 5, 0, 15);
+                        ctx.bezierCurveTo(10, 5, 5, -5, 0, 0);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                update() {
+                    this.y -= this.speed;
+                    this.wobble += this.wobbleSpeed;
+                    this.x += Math.sin(this.wobble) * 1;
+
+                    // Reset when goes off top
+                    if (this.y < -20) {
+                        this.y = canvas.height + 20;
+                        this.x = Math.random() * canvas.width;
+                    }
+                }
+            }
+
+            // Initialize particles
+            for(let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animateParticles);
+            }
+            
+            animateParticles();
+        });
+    </script>
+</body>
+</html>
