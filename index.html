@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Surprise for My Bestie</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@300;400;600;800&family=Caveat:wght@400;700&display=swap');
+
+        :root {
+            --gold: #FFD700;
+            --pink: #FF758C;
+            --purple: #700B97;
+        }
+
+        body {
+            background: #050505;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-handwriting { font-family: 'Caveat', cursive; }
+        .font-magical { font-family: 'Dancing Script', cursive; }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Polaroid Effect */
+        .polaroid {
+            background: white;
+            padding: 12px 12px 40px 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            cursor: grab;
+            user-select: none;
+        }
+        .polaroid:active { cursor: grabbing; }
+        
+        .tape {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 5;
+        }
+
+        /* Floating Animation */
+        .float-slow { animation: float 6s ease-in-out infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        /* Particle Background */
+        #particles-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Secret Button Pulse */
+        .secret-btn {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .secret-btn:hover { background: rgba(255, 117, 140, 0.5); }
+
+        .custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--pink);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+    </style>
+</head>
+<body class="selection:bg-pink-500/30">
+
+    <!-- Custom Cursor -->
+    <div id="cursor" class="custom-cursor hidden md:block"></div>
+
+    <!-- Background Canvas -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Music Player -->
+    <div class="fixed bottom-6 left-6 z-50 flex items-center gap-3 glass p-2 rounded-full pr-4">
+        <button id="music-toggle" class="bg-pink-500 p-3 rounded-full hover:scale-110 transition-transform">
+            <i data-lucide="music"></i>
+        </button>
+        <span class="text-xs font-semibold uppercase tracking-widest opacity-70">Birthday Mix</span>
+        <audio id="bg-music" loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <!-- 1️⃣ UNLOCK SCREEN -->
+    <section id="unlock-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#050505]">
+        <div class="relative group">
+            <div class="absolute inset-0 bg-pink-500 blur-3xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            <button id="unlock-btn" class="relative glass px-12 py-6 rounded-full text-2xl font-bold tracking-[0.2em] hover:scale-105 active:scale-95 transition-all">
+                UNLOCK THE SURPRISE 🎁
+            </button>
+        </div>
+        <p class="mt-8 text-gray-500 font-light tracking-widest animate-pulse">Wait for the magic...</p>
+    </section>
+
+    <!-- MAIN CONTENT (Hidden initially) -->
+    <div id="main-content" class="relative z-10 opacity-0 hidden">
+        
+        <!-- 2️⃣ HERO SECTION -->
+        <section class="min-h-screen flex flex-col items-center justify-center px-4 relative">
+            <div class="text-center space-y-6">
+                <h1 id="hero-title" class="text-6xl md:text-8xl font-extrabold tracking-tighter bg-gradient-to-r from-pink-400 via-gold-200 to-pink-500 bg-clip-text text-transparent">
+                    Happy Birthday!
+                </h1>
+                <div class="h-10">
+                    <p id="typing-text" class="text-xl md:text-2xl text-pink-200 font-light tracking-widest uppercase"></p>
+                </div>
+                <div class="pt-10 flex justify-center">
+                    <i data-lucide="chevron-down" class="animate-bounce text-pink-300 opacity-50"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3️⃣ INTERACTIVE MEMORY GALLERY -->
+        <section class="py-24 px-4 overflow-hidden">
+            <div class="max-w-6xl mx-auto text-center mb-16">
+                <h2 class="text-4xl font-magical text-pink-300">Our Time Capsule</h2>
+                <p class="text-gray-400 mt-2">Draggable memories (Try moving them!)</p>
+            </div>
+            
+            <div id="gallery-container" class="relative h-[600px] w-full max-w-5xl mx-auto">
+                <!-- Polaroid 1 -->
+                <div class="polaroid absolute top-0 left-[10%] w-64 rotate-[-6deg] float-slow" style="z-index: 10;">
+                    <div class="tape"></div>
+                    <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400" class="w-full h-48 object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                    <p class="font-handwriting text-2xl text-slate-800 mt-4 text-center">Best Memories ✨</p>
+                </div>
+
+                <!-- Polaroid 2 -->
+                <div class="polaroid absolute top-20 right-[15%] w-60 rotate-[4deg] float-slow" style="z-index: 11; animation-delay: -2s;">
+                    <div class="tape"></div>
+                    <img src="https://images.unsplash.com/photo-1518806118471-f28b20a1d79d?w=400" class="w-full h-44 object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                    <p class="font-handwriting text-2xl text-slate-800 mt-4 text-center">Crazy Moments 😂</p>
+                </div>
+
+                <!-- Polaroid 3 -->
+                <div class="polaroid absolute bottom-10 left-[30%] w-64 rotate-[-2deg] float-slow" style="z-index: 12; animation-delay: -4s;">
+                    <div class="tape"></div>
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" class="w-full h-52 object-cover grayscale hover:grayscale-0 transition-all duration-700">
+                    <p class="font-handwriting text-2xl text-slate-800 mt-4 text-center">Forever Bestie ❤️</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4️⃣ AI MESSAGE GENERATOR -->
+        <section class="py-32 px-4 flex flex-col items-center">
+            <div class="max-w-xl w-full glass p-8 md:p-12 rounded-3xl text-center space-y-8 relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/20 blur-3xl rounded-full"></div>
+                
+                <i data-lucide="sparkles" class="mx-auto text-gold w-12 h-12"></i>
+                <h3 class="text-2xl font-bold">A Heartfelt Message</h3>
+                
+                <div id="ai-message-box" class="min-h-[120px] flex items-center justify-center">
+                    <p id="generated-message" class="text-lg leading-relaxed text-pink-100 italic"></p>
+                </div>
+
+                <button id="generate-btn" class="bg-gradient-to-r from-pink-500 to-purple-600 px-8 py-3 rounded-full font-bold hover:shadow-[0_0_25px_rgba(236,72,153,0.4)] transition-all flex items-center gap-2 mx-auto">
+                    <span>GENERATE MAGIC</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 6️⃣ HIDDEN SURPRISE -->
+        <section class="py-20 flex justify-center">
+            <div id="secret-trigger" class="secret-btn" title="Something hidden..."></div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="py-10 text-center text-gray-600 text-sm tracking-widest uppercase">
+            Made with Love for my Bestie &bull; 2024
+        </footer>
+    </div>
+
+    <script>
+        // --- INITIALIZATION ---
+        lucide.createIcons();
+        gsap.registerPlugin(TextPlugin);
+
+        const music = document.getElementById('bg-music');
+        const musicToggle = document.getElementById('music-toggle');
+        const cursor = document.getElementById('cursor');
+
+        // --- CUSTOM CURSOR ---
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 });
+        });
+
+        // --- PARTICLE BACKGROUND ---
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initParticles() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<60; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speedY: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random() * 0.5
+                });
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                p.y -= p.speedY;
+                if(p.y < -10) p.y = canvas.height + 10;
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', initParticles);
+        initParticles();
+        animateParticles();
+
+        // --- UNLOCK SEQUENCE ---
+        document.getElementById('unlock-btn').addEventListener('click', () => {
+            // Confetti Explosion
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FF758C', '#FFD700', '#ffffff']
+            });
+
+            // Music Start
+            music.play().catch(() => console.log("User interaction required for audio"));
+            
+            // Screen Transition
+            gsap.to("#unlock-screen", {
+                opacity: 0,
+                y: -100,
+                duration: 1.5,
+                ease: "expo.inOut",
+                onComplete: () => {
+                    document.getElementById('unlock-screen').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    startMainAnimations();
+                }
+            });
+        });
+
+        function startMainAnimations() {
+            gsap.to("#main-content", { opacity: 1, duration: 1 });
+            
+            // Hero Title
+            gsap.from("#hero-title", {
+                scale: 0.8,
+                opacity: 0,
+                duration: 2,
+                ease: "elastic.out(1, 0.3)"
+            });
+
+            // Typing Subtitle
+            gsap.to("#typing-text", {
+                duration: 4,
+                text: "Today the world celebrates someone truly special.",
+                ease: "none",
+                delay: 1
+            });
+        }
+
+        // --- INTERACTIVE POLAROIDS (Drag Logic) ---
+        const polaroids = document.querySelectorAll('.polaroid');
+        polaroids.forEach(p => {
+            let isDragging = false;
+            let offset = { x: 0, y: 0 };
+
+            p.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                p.style.zIndex = 50;
+                offset.x = e.clientX - p.offsetLeft;
+                offset.y = e.clientY - p.offsetTop;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                p.style.left = (e.clientX - offset.x) + 'px';
+                p.style.top = (e.clientY - offset.y) + 'px';
+                p.classList.remove('float-slow'); // Stop float while dragging
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        });
+
+        // --- MESSAGE GENERATOR ---
+        const messageTemplates = [
+            "You are not just my best friend — you are the person who makes ordinary days unforgettable. Thank you for every laugh, every memory, and every moment. Happy Birthday!",
+            "To the one who knows me better than I know myself: May your day be filled with as much joy as you've brought into my life. Stay iconic!",
+            "I'm so lucky to have a friend like you. You're the main character in all my favorite stories. Here's to another year of chaotic adventures!",
+            "Life is better with you by my side. Thank you for being my unbiological sister/brother and my constant support. Have the best day ever!"
+        ];
+
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            const btn = document.getElementById('generate-btn');
+            const box = document.getElementById('generated-message');
+            
+            btn.disabled = true;
+            box.innerHTML = "";
+            const text = messageTemplates[Math.floor(Math.random() * messageTemplates.length)];
+            
+            gsap.to(box, {
+                duration: 3,
+                text: text,
+                ease: "none",
+                onComplete: () => { btn.disabled = false; }
+            });
+
+            confetti({
+                particleCount: 40,
+                scalar: 0.7,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 }
+            });
+            confetti({
+                particleCount: 40,
+                scalar: 0.7,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 }
+            });
+        });
+
+        // --- SECRET TRIGGER ---
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+
+                const particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+            
+            // Final Secret Modal-style Alert (Custom UI)
+            const secretMsg = document.createElement('div');
+            secretMsg.className = "fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md px-4";
+            secretMsg.innerHTML = `
+                <div class="glass p-10 rounded-3xl text-center max-w-lg border-gold/30 scale-0 transition-transform duration-500" id="final-modal">
+                    <h2 class="text-4xl font-magical text-gold mb-6 italic">One Last Thing...</h2>
+                    <p class="text-xl text-white leading-relaxed">You mean the world to me. I’m lucky to have a best friend like you. Happy Birthday 🎉</p>
+                    <button class="mt-8 px-6 py-2 border border-white/20 rounded-full text-xs uppercase tracking-widest hover:bg-white/10" onclick="this.parentElement.parentElement.remove()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(secretMsg);
+            setTimeout(() => document.getElementById('final-modal').classList.add('scale-100'), 50);
+        });
+
+        // --- MUSIC TOGGLE ---
+        musicToggle.addEventListener('click', () => {
+            if (music.paused) {
+                music.play();
+                musicToggle.classList.add('bg-pink-500');
+            } else {
+                music.pause();
+                musicToggle.classList.remove('bg-pink-500');
+            }
+        });
+    </script>
+</body>
+</html>
